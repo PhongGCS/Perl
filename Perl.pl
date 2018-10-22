@@ -1,10 +1,12 @@
 use strict;
 use warnings;
+use File::Find;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use Digest::file qw(digest_file_hex);
 
 my $DB_Name = 'save.ini';
 my %map_digest;
+my @fileList;
 
 Menu();
 sub Menu {
@@ -41,7 +43,7 @@ sub monitorFile {
     my $olddigest = md5_hex(<DATA>);
     close(DATA);
 
-    #writeDB("$fileinput:$olddigest");
+    writeDB("$fileinput:$olddigest");
 
     while (1) {
         open (DATAFILE, "<$fileinput") or die ("error initial File");
@@ -80,21 +82,23 @@ sub monitorFolder {
     } 
 
     ReadDB();
-    print %map_digest;
-    while(my $input_file = readdir(DIR)){
-        next if ($input_file =~ /^\./);
-        if (exists $map_digest{$input_file}) { 
-            if ($map_digest{$input_file} ne digest_file_hex($directory.'/'.$input_file, "MD5")){
-                print "File $input_file changed! \n";
+    opendir (DIR, $directory) or die $!;
+    find(\&getFile,  $directory);
+    #print @fileList;
+    foreach my $filename (@fileList){ 
+        if (exists $map_digest{$filename}) { 
+            if ($map_digest{$filename} ne digest_file_hex($filename, "MD5")){
+                print "File $filename changed! \n";
             }
             else{
-                print "File $input_file not changed! \n";
+                print "File $filename not changed! \n";
             }
-        }else{ 
-            if(-e $directory.'/'.$input_file){
-                print "File $input_file changed!!! \n";
+        }else{
+            print "File $filename changed name! \n";
+            if(-e $directory.'/'.$filename){
+                print "File $filename changed name!!! \n";
             }else{
-                print "File $input_file is not exist!";
+                print "File $filename is not exist!";
             }
         }
     }
@@ -106,12 +110,23 @@ sub saveFolderStatus {
     foreach (@_) {
         $directory = $_;
     }  
+    opendir (DIR, $directory) or die $!;
     open(my $DBFILE, '>', $DB_Name);
-    while(my $file = readdir(DIR)){
-        #next if ($file ne ".." || $file ne ".." );
-        next if ($file =~ /^\./);
-        my $file_path = $directory.'/'.$file;
-        print $DBFILE "$file:", digest_file_hex($file_path, "MD5"),"\n" ;
+    find(\&getFile,  $directory);
+
+    foreach my $filename (@fileList){
+        print $DBFILE "$filename:", digest_file_hex($filename, "MD5"),"\n" ; 
     }
     close($DBFILE);
+    print "Luu Trang Thai Thanh Cong\n";
+}
+sub getFile {
+    if (-d){
+    }else{
+        push @fileList, $File::Find::name;
+    }
+}
+
+sub getFile {
+        push @fileList, $File::Find::name;
 }

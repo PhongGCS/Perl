@@ -1,1 +1,43 @@
-ddđ111111
+subfolder
+    file1.txt           =>  FILE1                       file0.txt => FILE1
+    file2.txt           =>  FILE2
+    subsub              =>  FILED                       subsub              =>  FILED
+        file3.txt       =>  FILE3                           file3.txt       =>  FILE3
+        file4.txt       =>  FILE4                           file4.txt       =>  FILE4
+        
+        file4.txt       =>  FILE4
+
+Path                    HASH                TYPE
+subfolder/file1.txt     => FILE1            file
+subfolder/file2.txt     => FILE2            file
+subfolder/subsub        => file2            diretory
+
+
+Phat hien file bi xoa (K ton tai file nao trong thu muc co chu hash) 
+Phat hien file bi thay doi 
+#########################################################
+$listChange
+Foreach $listPath
+    # Kiem tra thay doi noi dung cua file
+    if ( exit($item.Path) ) {
+        if (hash_file != $item.Hash){
+            print $item.Path, " Da bi thay doi noi dung";
+            push ($item,$listChange)
+            continue;
+        }
+    }else {
+        push ($item,$listChange)        
+    }
+#########################################################
+# Kiem tra xoa file hoac thay doi ten
+Lay het cau truc thu muc: CurrentPath
+Foreach (CurrentPath )
+    if ( in_array($item, $listChange) ) {
+        print $item.Path, " Da bi thay doi noi dung";
+        continue;
+    }
+j
+
+
+
+            
