@@ -11,7 +11,7 @@ my @fileList;
 Menu();
 sub Menu {
     while (1){
-        print "Enter 1:  Giam Sat File. \n";
+        print "Enter 1:  Giam Sat File - Real Time. \n";
         print "Enter 2:  Kiem Tra Giam Sat Thu Muc. \n";
         print "Enter 3:  Luu Trang Thai Thu Muc. \n";
         print "Enter 0: Thoat.\n";
@@ -76,40 +76,50 @@ sub InputFolder {
     return $directory
 }
 sub monitorFolder {
-    my $directory;
-    foreach (@_) {
-        $directory = $_;
-    } 
+    my $directory = shift(@_);
 
     ReadDB();
     opendir (DIR, $directory) or die $!;
     find(\&getFile,  $directory);
     #print @fileList;
     foreach my $filename (@fileList){ 
-        if (exists $map_digest{$filename}) { 
-            if ($map_digest{$filename} ne digest_file_hex($filename, "MD5")){
-                print "File $filename changed! \n";
-            }
-            else{
-                print "File $filename not changed! \n";
-            }
-        }else{
-            print "File $filename changed name! \n";
-            if(-e $directory.'/'.$filename){
-                print "File $filename changed name!!! \n";
-            }else{
-                print "File $filename is not exist!";
-            }
-        }
+        # if (exists $map_digest{$filename}) { 
+        #     if ($map_digest{$filename} ne digest_file_hex($filename, "MD5")){
+        #         print "File $filename changed! \n";
+        #     }
+        #     else{
+        #         print "File $filename not changed! \n";
+        #     }
+        # }else{
+        #     print "File $filename changed name! \n";
+        #     if(-e $directory.'/'.$filename){
+        #         print "File $filename changed name!!! \n";
+        #     }else{
+        #         print "File $filename is not exist!";
+        #     }
+        # }
+
+        # New file
+        if (!scalar($map_digest{$filename})) { doPrint($filename, "Created."); }
+        # Change File
+        elsif ($map_digest{$filename} ne digest_file_hex($filename, "MD5")) {
+			my $text = "Changed ";
+			&doPrint($filename, $text);
+		}
     }
+
+    closedir(DIR);
     
+    foreach my $filename (keys %map_digest) {
+        if (!-e $filename) { 
+			&doPrint($filename, "Deleted.");
+		}
+	}
+    exit;
 }
 
 sub saveFolderStatus {
-    my $directory;
-    foreach (@_) {
-        $directory = $_;
-    }  
+    my $directory = shift(@_);
     opendir (DIR, $directory) or die $!;
     open(my $DBFILE, '>', $DB_Name);
     find(\&getFile,  $directory);
@@ -126,7 +136,9 @@ sub getFile {
         push @fileList, $File::Find::name;
     }
 }
-
-sub getFile {
-        push @fileList, $File::Find::name;
+# Print out a file change in a consistent format
+sub doPrint {
+	my $fn = shift(@_);
+	my $t = shift(@_);
+	print $fn."\t\t".$t."\n";
 }
